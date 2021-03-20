@@ -43,12 +43,8 @@ def is_possibly_isomorphic(G, H, max_iter=10):
   Returns:
       bool -- Return "False" if definitely not isomorphic
   """
-  G = dgl.from_networkx(G)
+#   G = dgl.from_networkx(G)
   H = dgl.from_networkx(H)
-
-  # If the number of nodes is different, return False.
-  if G.number_of_nodes() != H.number_of_nodes():
-    return False
 
   # Set initial colors
   G.ndata['color'] = th.zeros(G.number_of_nodes())
@@ -56,7 +52,6 @@ def is_possibly_isomorphic(G, H, max_iter=10):
   N = G.number_of_dst_nodes()
   current_max_color = 0
   
-
   # Refine colors until convergence
   for i in range(max_iter):
     #print(i)
@@ -68,8 +63,8 @@ def is_possibly_isomorphic(G, H, max_iter=10):
     G_multiset = dict(zip(G_unique_colors, G_counts))
     H_multiset = dict(zip(H_unique_colors, H_counts))
 
-    if G_multiset != H_multiset:
-      return False
+#     if G_multiset != H_multiset:
+#       return False
 
     # Recoloring (str -> int)
     unique_colors = np.unique(np.append(G_unique_colors, H_unique_colors))
@@ -80,5 +75,5 @@ def is_possibly_isomorphic(G, H, max_iter=10):
     H.ndata['color'] = th.from_numpy(np.array([recolor_map[color]
                                  for color in H_colors]) + current_max_color)
     current_max_color += len(unique_colors)
-
+  
   return True

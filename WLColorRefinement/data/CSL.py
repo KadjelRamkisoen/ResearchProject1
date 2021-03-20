@@ -7,13 +7,13 @@ import pickle
 import numpy as np
 
 import dgl
+from dgl import from_scipy
 
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
 random.seed(42)
 
 from scipy import sparse as sp
-
 
 class DGLFormDataset(torch.utils.data.Dataset):
     """
@@ -123,10 +123,12 @@ class CSL(torch.utils.data.Dataset):
         Source: https://github.com/PurdueMINDS/RelationalPooling/
     """
     
-    def __init__(self, path="data/CSL/"):
+    def __init__(self, path="/data/CSL"):
         self.name = "CSL"
-        self.adj_list = pickle.load(open(os.path.join(path, 'graphs_Kary_Deterministic_Graphs.pkl'), 'rb'))
-        self.graph_labels = torch.load(os.path.join(path, 'y_Kary_Deterministic_Graphs.pt'))
+        #self.adj_list = pickle.load(open(os.path.join(path, 'graphs_Kary_Deterministic_Graphs.pkl'), 'rb'))
+        self.adj_list = pickle.load(open('C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\CSL\\graphs_Kary_Deterministic_Graphs.pkl', 'rb'))
+        #self.graph_labels = torch.load(os.path.join(path,'y_Kary_Deterministic_Graphs.pt')
+        self.graph_labels = torch.load('C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\CSL\\y_Kary_Deterministic_Graphs.pt')
         self.graph_lists = []
         
         self.n_samples = len(self.graph_labels)
@@ -139,7 +141,7 @@ class CSL(torch.utils.data.Dataset):
         print("[I] Preparing Circular Skip Link Graphs v4 ...")
         for sample in self.adj_list:
             _g = dgl.DGLGraph()
-            _g.from_scipy_(sample)
+            _g = from_scipy(sample)
             g = dgl.transform.remove_self_loop(_g)
             g.ndata['feat'] = torch.zeros(g.number_of_nodes()).long()
             #g.ndata['feat'] = torch.arange(0, g.number_of_nodes()).long() # v1
@@ -226,7 +228,7 @@ class CSLDataset(torch.utils.data.Dataset):
         self.name = name
         
         dataset = CSL()
-
+        print(Dataset)
         print("[!] Dataset: ", self.name)
 
         # this function splits data into train/val/test and returns the indices
