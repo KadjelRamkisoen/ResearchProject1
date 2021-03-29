@@ -44,7 +44,7 @@ def is_possibly_isomorphic(G, H, max_iter=10):
       bool -- Return "False" if definitely not isomorphic
   """
 #   G = dgl.from_networkx(G)
-  H = dgl.from_networkx(H)
+#   H = dgl.from_networkx(H)
 
   # Set initial colors
   G.ndata['color'] = th.zeros(G.number_of_nodes())
