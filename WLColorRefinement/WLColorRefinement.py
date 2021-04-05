@@ -1,19 +1,19 @@
 import numpy as np
 import torch as th
 import dgl
-
+import tensorflow as tf
 
 def _send_color(edges):
-  return {'color': edges.src['color']}
+  return {'feat': edges.src['feat']}
 
 
 def _gen_create_multiset(num_nodes):
   def _create_multiset(nodes):
-    end = nodes.mailbox['color'].shape[1]
+    end = nodes.mailbox['feat'].shape[1]
     multiset = th.zeros((nodes.batch_size(), num_nodes)) - 1
-    multiset[:, 0] = nodes.data['color']
-    multiset[:, 1:end + 1] = nodes.mailbox['color'].sort().values
-    return {'color': multiset}
+    multiset[:, 0] = nodes.data['feat']
+    multiset[:, 1:end + 1] = nodes.mailbox['feat'].sort().values
+    return {'feat': multiset}
   return _create_multiset
 
 
@@ -27,7 +27,7 @@ def _to_color(colors):
 def _update_colors(G):
   N = G.number_of_dst_nodes()
   G.update_all(message_func = _send_color, reduce_func = _gen_create_multiset(N))
-  return list(map(_to_color, G.ndata.pop('color').cpu().numpy()))
+  return list(map(_to_color, G.ndata.pop('feat').cpu().numpy()))
 
 
 def wl_coloring(G, max_iter=10):
@@ -43,8 +43,10 @@ def wl_coloring(G, max_iter=10):
       G {networkx.classes.graph.Graph} -- Graph with attribute color added
   """
 
-  # Set initial colors
-  G.ndata['color'] = th.ones(G.number_of_nodes())
+  # Set initial colors if the feat tensor is empty
+  if (tf.equal(tf.size(G.ndata['feat']), 0)):
+    G.ndata['feat'] = th.ones(G.number_of_nodes())
+  
   N = G.number_of_dst_nodes()
   current_max_color = 0
   
@@ -60,8 +62,8 @@ def wl_coloring(G, max_iter=10):
     unique_colors = np.unique(G_unique_colors)
     recolor_map = {color: i + 1 for i, color in enumerate(unique_colors)}
 
-    G.ndata['color'] = th.from_numpy(np.array([recolor_map[color]
+    G.ndata['feat'] = th.from_numpy(np.array([recolor_map[color]
                                  for color in G_colors]) + current_max_color)
     current_max_color += len(unique_colors)
   
-  return True
+  return G
