@@ -8,7 +8,6 @@ import numpy as np
 import csv
 
 import dgl
-import dgl.graph
 
 from scipy import sparse as sp
 import numpy as np
@@ -104,9 +103,9 @@ class MoleculeDatasetDGL(torch.utils.data.Dataset):
         self.num_atom_type = 28 # known meta-info about the zinc dataset; can be calculated as well
         self.num_bond_type = 4 # known meta-info about the zinc dataset; can be calculated as well
         
-        data_dir='.\\data\\molecules'
+        data_dir='C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\molecules'
         if self.name == 'ZINC-full':
-            data_dir='.\\data\\molecules\\zinc_full'
+            data_dir='C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\molecules\\zinc_full'
             self.train = MoleculeDGL(data_dir, 'train', num_graphs=220011)
             self.val = MoleculeDGL(data_dir, 'val', num_graphs=24445)
             self.test = MoleculeDGL(data_dir, 'test', num_graphs=5000)
@@ -179,7 +178,7 @@ class MoleculeDataset(torch.utils.data.Dataset):
         start = time.time()
         print("[I] Loading dataset %s..." % (name))
         self.name = name
-        data_dir = 'data\\molecules\\'
+        data_dir = 'C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\molecules\\'
         with open(data_dir+name+'.pkl',"rb") as f:
             f = pickle.load(f)
             self.train = f[0]
