@@ -83,7 +83,7 @@ class SBMsDatasetDGL(torch.utils.data.Dataset):
         start = time.time()
         print("[I] Loading data ...")
         self.name = name
-        data_dir = 'C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\SBMs'
+        data_dir = 'data\\SBMs'
         self.train = load_SBMsDataSetDGL(data_dir, name, split='train')
         self.test = load_SBMsDataSetDGL(data_dir, name, split='test')
         self.val = load_SBMsDataSetDGL(data_dir, name, split='val')
@@ -155,7 +155,7 @@ class SBMsDataset(torch.utils.data.Dataset):
         start = time.time()
         print("[I] Loading dataset %s..." % (name))
         self.name = name
-        data_dir = 'data/SBMs/'
+        data_dir = 'data\\SBMs\\'
         with open(data_dir+name+'.pkl',"rb") as f:
             f = pickle.load(f)
             self.train = f[0]

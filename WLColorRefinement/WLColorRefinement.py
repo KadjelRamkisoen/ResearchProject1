@@ -2,6 +2,7 @@ import numpy as np
 import torch as th
 import dgl
 import tensorflow as tf
+import math
 
 def _send_color(edges):
   return {'feat': edges.src['feat']}
@@ -47,6 +48,24 @@ def wl_coloring(G, max_iter=10):
   if (tf.equal(tf.size(G.ndata['feat']), 0)):
     G.ndata['feat'] = th.ones(G.number_of_nodes())
   
+  if len(list(G.ndata['feat'].size())) > 1:
+    new_features = th.ones(G.number_of_nodes())
+    
+    for i in range(G.number_of_nodes()):
+        single_int_list = list()
+        # Ceil or floor the decimal values
+        for j in G.ndata['feat'][i]:
+            if int(math.modf(j)[0]*10) < 5:
+                single_int_list.append(int(math.floor(j)))
+            elif int(math.modf(j)[0]*10) > 5:
+                single_int_list.append(int(math.ceil(j)))
+        
+        # Create a single integer from all the values
+        single_int = sum(k * 10**l for l, k in enumerate(single_int_list[::-1]))
+        
+    new_features[i] = single_int
+    G.ndata['feat'] = new_features
+    
   N = G.number_of_dst_nodes()
   current_max_color = 0
   

@@ -14,7 +14,7 @@ def store_reduction_data(file, original_graphs, reduced_graphs):
         writer = csv.writer(csv_file)
         writer.writerow(fieldnames)
 
-        while i < len(reduced_graphs_list):   
+        while i < len(reduced_graphs):   
             x = original_graphs.train.__getitem__(i)[0]
             y = reduced_graphs[i]
             nx_x = x.to_networkx()
