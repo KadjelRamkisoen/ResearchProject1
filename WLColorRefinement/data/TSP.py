@@ -13,7 +13,7 @@ class TSP(Dataset):
     def __init__(self, data_dir, split="train", num_neighbors=25, max_samples=10000):    
         self.data_dir = data_dir
         self.split = split
-        self.filename = f'{data_dir}/tsp50-500_{split}.txt'
+        self.filename = f'{data_dir}\\tsp50-500_{split}.txt'
         self.max_samples = max_samples
         self.num_neighbors = num_neighbors
         self.is_test = split.lower() in ['test', 'val']
@@ -29,6 +29,8 @@ class TSP(Dataset):
         file_data = open(self.filename, "r").readlines()[:self.max_samples]
         
         for graph_idx, line in enumerate(file_data):
+            print('Graph_idx:', graph_idx)
+            
             line = line.split(" ")  # Split into list
             num_nodes = int(line.index('output')//2)
             
@@ -110,9 +112,9 @@ class TSP(Dataset):
 class TSPDatasetDGL(Dataset):
     def __init__(self, name):
         self.name = name
-        self.train = TSP(data_dir='C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\TSP\\TSP', split='train', num_neighbors=25, max_samples=10000) 
-        self.val = TSP(data_dir='C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\TSP\\TSP', split='val', num_neighbors=25, max_samples=1000)
-        self.test = TSP(data_dir='C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\TSP\\TSP', split='test', num_neighbors=25, max_samples=1000)
+        self.train = TSP(data_dir='C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\TSP', split='train', num_neighbors=25, max_samples=10000) 
+        self.val = TSP(data_dir='C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\TSP', split='val', num_neighbors=25, max_samples=1000)
+        self.test = TSP(data_dir='C:\\Users\\User1\\Documents\\GitHub\\ResearchProject1\\WLColorRefinement\\data\\TSP', split='test', num_neighbors=25, max_samples=1000)
         
 
 class TSPDataset(Dataset):
