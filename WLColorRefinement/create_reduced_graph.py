@@ -12,21 +12,66 @@ import dgl
     
     Function to create a supernode
     The idea is to have a function that iterates over the graph and
-    finds the nodes with the same colors and then places them in one supernode
+    finds the nodes with the same colors and then places them in one supernode.
+    
+    super_node = {
+        color: {
+            node: list()
+        }
+    }
+    
+    For the reduced graph the original features are necessary, so these have to be saved and passed along.
+    These are stored in original_feat.
+    
+    super_node_ori_feat = {
+        color: {
+            'original feat':
+            'nr_nodes'
+        }
+    }
+    
+    The logic highly depends on the ordering of the colors and nodes. The i-th color in the colors array belongs
+    to the i-th node in the nodes array.
 """
 def super_node(graph):
+    # Initialize super_node dictionary
     super_node = {}
+    
+    # Initialize super_node dictionary for the original features and nr_nodes
+    feat = {}
+    
+    # The ['feat'] array contains the wl coloring
     colors = graph.ndata['feat'].numpy()
+    
+    # The node numbers are retrieved from the graph
     nodes = graph.nodes().numpy()
-
+    
+    #Added
+    # The original features from the original graph
+    orignal_feat = graph.ndata['original_feat'].numpy()
+    
     count = len(colors)
     i = 0
     while i < count:
         if colors[i] not in super_node:
+            # For each color in the colors array, add it to the super_node and the super_node_ori_feat
             super_node[colors[i]] = dict()
+            feat[colors[i]] = dict()
+            
+        # Add the node that has the color to the super_node
         super_node[colors[i]][nodes[i]] = list()
+        
+        #Added
+        # Add the orignal feature of the node to super_node_ori_feat
+        feat[colors[i]]['original_feat'] = orignal_feat[i]
         i += 1
-    return super_node
+        
+    #Added
+    for color in super_node:
+        nr_nodes = len(super_node[color])
+        feat[color]['nr_nodes'] = nr_nodes
+        
+    return super_node, feat
 
 
 """
@@ -53,6 +98,12 @@ def create_edge_list(graph):
     Function to find the edges between supernodes.
     
     Make sure that the the src_edges of the create_edge_list function is sorted from low to high.
+    
+    super_node = {
+        color: {
+            node: [edges]
+        }
+    }
 """
 def super_edge(edges, super_node):
     for color in super_node:
@@ -67,6 +118,7 @@ def super_edge(edges, super_node):
 
 """
     create_mapping(dict)
+    
     @super_node - the supernode with original nodes added to it and a list of original edges
     
     Create a mapping from one nodes to super nodes.
@@ -180,51 +232,58 @@ def calc_weights(graph):
     create_DGLGraph(list, list, list)
     
 """
-def create_DGLGraph(src_nodes, dst_nodes, edata, mapping):
+def create_DGLGraph(src_nodes, dst_nodes, edata, mapping, nodeFeat):
     src_nodes = torch.tensor(src_nodes)
     dst_nodes = torch.tensor(dst_nodes)
     edata = torch.tensor(edata)
-    ndata = list()
+    original_feat = list()
+    nr_nodes = list()
     
     reduced_graph = dgl.graph((src_nodes, dst_nodes))
     reduced_graph.edata['feat'] = edata
     i = 0
     while i < len(reduced_graph.nodes()):
-        ndata.append(mapping[i])
+        original_feat.append(nodeFeat[mapping[i]]['original_feat'])
+        nr_nodes.append(nodeFeat[mapping[i]]['nr_nodes'])
         i += 1
     
-    reduced_graph.ndata['feat'] = torch.tensor(ndata)
+    new_features = torch.zeros((reduced_graph.number_of_nodes(), 2))
+    new_features[:,0] = torch.tensor(original_feat)
+    new_features[:,1] = torch.tensor(nr_nodes)
+    
+    reduced_graph.ndata['feat'] = torch.tensor(new_features)
     
     return reduced_graph
 
-def reduced_graph(colored_graphs): 
-    reduced_graphs_list = list()
-    for graph in colored_graphs:
-        superNode = super_node(graph)
-        edges = create_edge_list(graph)
-        superNode = super_edge(edges, superNode)
-        node_color_mapping = create_mapping(superNode)
-        prep_graph = prepare_DGLgraph(superNode, node_color_mapping)
+def reduced_graph(graph): 
+#     reduced_graphs_list = list()
+#     for graph in colored_graphs:
+    superNode, originalFeat = super_node(graph)
+    edges = create_edge_list(graph)
+    superNode = super_edge(edges, superNode)
+    node_color_mapping = create_mapping(superNode)
+    prep_graph = prepare_DGLgraph(superNode, node_color_mapping)
 
-        color_node_mapping = {}
-        count = 0
-        for i in node_color_mapping:
-            if node_color_mapping[i] not in color_node_mapping:
-                color_node_mapping[node_color_mapping[i]] = count
-                count += 1
+    color_node_mapping = {}
+    count = 0
+    for i in node_color_mapping:
+        if node_color_mapping[i] not in color_node_mapping:
+            color_node_mapping[node_color_mapping[i]] = count
+            count += 1
 
-        src_nodes = list()
-        dst_nodes = list()
+    src_nodes = list()
+    dst_nodes = list()
 
-        i = 0
-        while i < len(prep_graph[1]):
-            src_nodes.append(color_node_mapping[prep_graph[1][i]])
-            dst_nodes.append(color_node_mapping[prep_graph[2][i]])
-            i += 1
+    i = 0
+    while i < len(prep_graph[1]):
+        src_nodes.append(color_node_mapping[prep_graph[1][i]])
+        dst_nodes.append(color_node_mapping[prep_graph[2][i]])
+        i += 1
 
-        reduced_graphs_list.append(
-            create_DGLGraph(
-                src_nodes, dst_nodes, prep_graph[3], node_color_mapping
-            )
-        )
-    return reduced_graphs_list
+    reducedGraph = create_DGLGraph(src_nodes, dst_nodes, prep_graph[3], node_color_mapping, originalFeat)
+#     _list.append(
+#             create_DGLGraph(
+#                 src_nodes, dst_nodes, prep_graph[3], node_color_mapping, originalFeat
+#             )
+#         )
+    return reducedGraph
