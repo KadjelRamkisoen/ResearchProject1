@@ -20,9 +20,12 @@ class GCNNet(nn.Module):
         hidden_dim = net_params['hidden_dim']
         in_dim = net_params['in_dim']
         out_dim = net_params['out_dim']
+        edim = net_params['edim']
         in_feat_dropout = net_params['in_feat_dropout']
         dropout = net_params['dropout']
         n_layers = net_params['L']
+        dgl_builtin = net_params['dgl_builtin']
+        
         self.readout = net_params['readout']
         self.batch_norm = net_params['batch_norm']
         self.residual = net_params['residual']
@@ -31,10 +34,10 @@ class GCNNet(nn.Module):
         self.embedding_h = nn.Linear(in_dim, hidden_dim)
 #         self.embedding_h = nn.Embedding(num_atom_type, hidden_dim)
         
-        self.layers = nn.ModuleList([GCNLayer(hidden_dim, hidden_dim, F.relu,
-                                              dropout, self.batch_norm, self.residual) for _ in range(n_layers-1)])
+        self.layers = nn.ModuleList([GCNLayer(hidden_dim, edim, hidden_dim, F.relu,
+                                              dropout, self.batch_norm, self.residual, dgl_builtin) for _ in range(n_layers-1)])
         self.layers.append(GCNLayer(hidden_dim, out_dim, F.relu,
-                                    dropout, self.batch_norm, self.residual))
+                                    dropout, self.batch_norm, self.residual, dgl_builtin))
         self.MLP_layer = MLPReadout(out_dim, 1)   # 1 out dim since regression problem        
 
     def forward(self, g, h, e):
@@ -42,7 +45,7 @@ class GCNNet(nn.Module):
         h = self.in_feat_dropout(h)
         
         for conv in self.layers:
-            h = conv(g, h)
+            h = conv(g, h, e)
         g.ndata['h'] = h
         
         if self.readout == "sum":

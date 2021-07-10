@@ -46,7 +46,7 @@ class GraphSageLayer(nn.Module):
         if self.batch_norm:
             self.batchnorm_h = nn.BatchNorm1d(out_feats)
 
-    def forward(self, g, h):
+    def forward(self, g, h, e):
         h_in = h              # for residual connection
         
         if self.dgl_builtin == False:
@@ -67,7 +67,7 @@ class GraphSageLayer(nn.Module):
                 g.update_all(fn.copy_src('h', 'm'), fn.mean('m', 'c'), self.nodeapply)
             h = g.ndata['h']
         else:
-            h = self.sageconv(g, h)
+            h = self.sageconv(g, h, e)
 
         if self.batch_norm:
             h = self.batchnorm_h(h)

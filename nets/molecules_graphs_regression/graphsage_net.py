@@ -37,15 +37,15 @@ class GraphSageNet(nn.Module):
         self.in_feat_dropout = nn.Dropout(in_feat_dropout)
         
         self.layers = nn.ModuleList([GraphSageLayer(hidden_dim, hidden_dim, F.relu,
-                                              dropout, aggregator_type, batch_norm, residual) for _ in range(n_layers-1)])
-        self.layers.append(GraphSageLayer(hidden_dim, out_dim, F.relu, dropout, aggregator_type, batch_norm, residual))
+                                              dropout, aggregator_type, batch_norm, residual, dgl_builtin = net_params['dgl_builtin'] ) for _ in range(n_layers-1)])
+        self.layers.append(GraphSageLayer(hidden_dim, out_dim, F.relu, dropout, aggregator_type, batch_norm, residual, dgl_builtin = net_params['dgl_builtin']))
         self.MLP_layer = MLPReadout(out_dim, 1)    # 1 out dim since regression problem
         
     def forward(self, g, h, e):
         h = self.embedding_h(h)
         h = self.in_feat_dropout(h)
         for conv in self.layers:
-            h = conv(g, h)
+            h = conv(g, h, e)
         g.ndata['h'] = h
         
         if self.readout == "sum":

@@ -65,13 +65,16 @@ class GINLayer(nn.Module):
             
         self.bn_node_h = nn.BatchNorm1d(out_dim)
 
-    def forward(self, g, h):
+    def forward(self, g, h, e):
         h_in = h # for residual connection
         
         g = g.local_var()
         g.ndata['h'] = h
-        g.update_all(fn.copy_u('h', 'm'), self._reducer('m', 'neigh'))
+        g.edata['w'] = e
+        g.update_all(fn.copy_u('h', 'w', 'm'), self._reducer('m', 'neigh'))
         h = (1 + self.eps) * h + g.ndata['neigh']
+        
+        h = self.conv(g, h, edge_weight = e)
         if self.apply_func is not None:
             h = self.apply_func(h)
 

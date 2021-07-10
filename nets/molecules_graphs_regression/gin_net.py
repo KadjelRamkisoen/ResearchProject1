@@ -63,7 +63,7 @@ class GINNet(nn.Module):
         hidden_rep = [h]
 
         for i in range(self.n_layers):
-            h = self.ginlayers[i](g, h)
+            h = self.ginlayers[i](g, h, e)
             hidden_rep.append(h)
 
         score_over_layer = 0
