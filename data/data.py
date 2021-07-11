@@ -21,8 +21,7 @@ def LoadData(DATASET_NAME):
 #         return SuperPixDataset(DATASET_NAME)
     
     # handling for (ZINC) molecule dataset
-    if DATASET_NAME == 'ZINC' or DATASET_NAME == 'ZINC_reduced' or DATASET_NAME == 'ZINC_reduced_b':
-        return MoleculeDataset(DATASET_NAME)
+    return MoleculeDataset(DATASET_NAME)
 
     # handling for the TU Datasets
 #     TU_DATASETS = ['ENZYMES', 'DD', 'PROTEINS_full']
