@@ -42,13 +42,16 @@ def super_node(graph):
     
     # The ['feat'] array contains the wl coloring
     colors = graph.ndata['feat'].numpy()
+#     print('Colors = ', colors)
     
     # The node numbers are retrieved from the graph
     nodes = graph.nodes().numpy()
+#     print('nodes = ', nodes)
     
     #Added
     # The original features from the original graph
     orignal_feat = graph.ndata['original_feat'].numpy()
+#     print('original feat = ', orignal_feat)
     
     count = len(colors)
     i = 0
@@ -70,7 +73,8 @@ def super_node(graph):
     for color in super_node:
         nr_nodes = len(super_node[color])
         feat[color]['nr_nodes'] = nr_nodes
-        
+#     print('super node = ', super_node)
+#     print('feat = ', feat)
     return super_node, feat
 
 
@@ -163,6 +167,20 @@ def prepare_DGLgraph(super_node, mapping):
                     weights[mapping_dst] = 1
                 else:
                     weights[mapping_dst] += 1
+#             import pprint
+#             print('\nsuper_node_reformat')
+#             pprint.pprint(super_node_reformat)
+#             print('\nsuper_node = ', super_node)
+            self_loop_node = [mapping[node], mapping[node]]
+#             print('[node, node] = ', self_loop_node)
+#             print(type(self_loop_node))
+#             print('edges = ', edges)
+#             print(type(edges))
+            if self_loop_node not in edges:
+                super_node[color][node].append(self_loop_node)
+                weights[mapping[node]] = 0
+#     print('weights = ', weights)
+#     pprint.pprint(super_node_reformat)  
     weights, src_edges, dst_edges = calc_weights(super_node_reformat)
     
 #     for i in super_node_reformat:
@@ -260,7 +278,9 @@ def reduced_graph(graph):
 #     for graph in colored_graphs:
     superNode, originalFeat = super_node(graph)
     edges = create_edge_list(graph)
+#     print('\nedges = ', edges)
     superNode = super_edge(edges, superNode)
+#     print('updated super node = ', superNode)
     node_color_mapping = create_mapping(superNode)
     prep_graph = prepare_DGLgraph(superNode, node_color_mapping)
 
