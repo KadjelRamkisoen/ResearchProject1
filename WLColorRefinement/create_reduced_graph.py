@@ -6,7 +6,7 @@ import os
 import torch
 import time
 import dgl
-
+import pprint
 """
     super_node(dgl.DGLgraph)
     
@@ -147,6 +147,8 @@ def create_mapping(super_node):
 """
 def prepare_DGLgraph(super_node, mapping): 
     super_node_reformat = {}
+#     print('super_node before reformatting')
+#     pprint.pprint(super_node)
     for color, nodes in super_node.items():
         super_node_reformat[color] = {}
         for node, edges in nodes.items():
@@ -179,10 +181,12 @@ def prepare_DGLgraph(super_node, mapping):
             if self_loop_node not in edges:
                 super_node[color][node].append(self_loop_node)
                 weights[mapping[node]] = 0
-#     print('weights = ', weights)
-#     pprint.pprint(super_node_reformat)  
+#     print('super-node-reformat: ')
+#     pprint.pprint(super_node_reformat) 
+    
     weights, src_edges, dst_edges = calc_weights(super_node_reformat)
     
+#     print('super_node_reformat')
 #     for i in super_node_reformat:
 #         print('{')
 #         print('Super node: ', i)
@@ -191,7 +195,8 @@ def prepare_DGLgraph(super_node, mapping):
 #             print('Node data: ', super_node_reformat[i][j])
 #         print('}')
 #         print('\n')
-#     print('super-node-reformat: ', super_node_reformat, '\n')                      
+#     print('super-node-reformat: ')
+#     pprint.pprint(super_node_reformat)
     return super_node_reformat, src_edges, dst_edges, weights
 
 
@@ -207,42 +212,85 @@ def calc_weights(graph):
     
     for color in graph:
         # If the there is only one node in the supernode, then just add the weight from the 'weight' attribute
+        
         if len(graph[color]) == 1:
             for node in graph[color]:
                 for weight in graph[color][node]['weights']:
                     weights_list.append(graph[color][node]['weights'][weight])
                     src_edges.append(color)
                     dst_edges.append(weight)
+#                     print('single node')
+#                     print('src_edges = ', src_edges)
+#                     print('dst_edges = ', dst_edges)
         # If there are more nodes in the supernode, then check whether they all have outgoing edges to the same supernodes
         else:
             x = list()
             src_nodes = list()
             dst_nodes = list()
+#             print('graph[color] = ', graph[color])
+            
             for node in graph[color]:
+#                 print('node = ', node)
                 #Add all the weights for each node to the list x
                 x.append(graph[color][node]['weights'])
                 for w in graph[color][node]['weights']:
                     src_nodes.append(color)
                     dst_nodes.append(w)
+#                 print('src_nodes = ',src_nodes)
+#                 print('dst_nodes = ', dst_nodes)
             # Take the first value in the list x
+#             print('x = ', x)
+#             print('src_nodes = ',src_nodes)
+#             print('dst_nodes = ',dst_nodes)
+#             print('\n')
             x_1 = x[0]
 
-            i = 1
+            j = 1
             # Check if all the edges within x_1 are also in the other lists in x
             for weight in x_1:
-                while i < len(x):
+#                 print('x_1 = ', x_1)
+#                 print('weight = ', weight)
+                
+                exists = True
+                while j < len(x):
+#                     print('i = ', j)
                     # If the the edges from x_1 are in the next list in x, then check the weight
-                    if weight in x[i]:
-                        # Store the smallest weight value. There will be no edge is there is only one occurence of the edge in the list
+#                     print('x[i] = ', x[j])
+                    if weight not in x[j]:
+                        exists = False
+                        break
+                    j += 1
+#                 print(exists)
+                
+                i = 0
+                if exists:
+                    src_edges.append(color)
+                    dst_edges.append(weight)
+#                     print('src_edges = ', src_edges)
+#                     print('dst_edges = ', dst_edges)
+                    smallest_weight = -1
+                    
+                    while i < len(x):
+                    # Store the smallest weight value. There will be no edge if there is only one occurence of the edge in the list
                         if x[i][weight] >= x_1[weight]:
-                            weights_list.append(x_1[weight])
-                            src_edges.append(src_nodes[i])
-                            dst_edges.append(dst_nodes[i])
+                            smallest_weight = x_1[weight]
+#                             weights_list.append(x_1[weight])
+#                             src_edges.append(src_nodes[i])
+#                             dst_edges.append(dst_nodes[i])
+#                             print('src_edges = ', src_edges)
+#                             print('dst_edges = ', dst_edges)
                         elif x[i][weight] < x_1[weight]:
-                            weights_list.append(x[i][weight])
-                            src_edges.append(src_nodes[i])
-                            dst_edges.append(dst_nodes[i])
-                    i += 1
+                            smallest_weight = x[i][weight]
+#                             weights_list.append(x[i][weight])
+#                             src_edges.append(src_nodes[i])
+#                             dst_edges.append(dst_nodes[i])
+#                             print('src_edges = ', src_edges)
+#                             print('dst_edges = ', dst_edges)
+                        i += 1
+                    weights_list.append(smallest_weight)
+                       
+#         print('src_edges = ', src_edges)
+#         print('dst_edges = ', dst_edges)
     return weights_list, src_edges, dst_edges
 
 
@@ -252,8 +300,11 @@ def calc_weights(graph):
 """
 def create_DGLGraph(src_nodes, dst_nodes, edata, mapping, nodeFeat):
     src_nodes = torch.tensor(src_nodes)
+#     print('Source nodes: ', src_nodes, '\n')
     dst_nodes = torch.tensor(dst_nodes)
+#     print('Destination nodes: ', dst_nodes, '\n')
     edata = torch.tensor(edata)
+#     print('edge features: ', edata, '\n')
     original_feat = list()
     nr_nodes = list()
     
@@ -294,6 +345,8 @@ def reduced_graph(graph):
     src_nodes = list()
     dst_nodes = list()
 
+#     print(prep_graph[1])
+#     print(prep_graph[2])                      
     i = 0
     while i < len(prep_graph[1]):
         src_nodes.append(color_node_mapping[prep_graph[1][i]])
