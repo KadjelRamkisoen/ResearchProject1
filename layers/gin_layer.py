@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import dgl.function as fn
-
+from dgl.nn.pytorch import GINConv
 """
     GIN: Graph Isomorphism Networks
     HOW POWERFUL ARE GRAPH NEURAL NETWORKS? (Keyulu Xu, Weihua Hu, Jure Leskovec and Stefanie Jegelka, ICLR 2019)
@@ -58,20 +58,24 @@ class GINLayer(nn.Module):
             self.residual = False
             
         # to specify whether eps is trainable or not.
-        if learn_eps:
-            self.eps = torch.nn.Parameter(torch.FloatTensor([init_eps]))
-        else:
-            self.register_buffer('eps', torch.FloatTensor([init_eps]))
+#         if learn_eps:
+#             self.eps = torch.nn.Parameter(torch.FloatTensor([init_eps]))
+#         else:
+#             self.register_buffer('eps', torch.FloatTensor([init_eps]))
             
-        self.bn_node_h = nn.BatchNorm1d(out_dim)
+#         self.bn_node_h = nn.BatchNorm1d(out_dim)
+        self.conv = GINConv(in_dim, aggr_type, init_eps=0, learn_eps=True)
 
     def forward(self, g, h):
         h_in = h # for residual connection
         
-        g = g.local_var()
-        g.ndata['h'] = h
-        g.update_all(fn.copy_u('h', 'm'), self._reducer('m', 'neigh'))
-        h = (1 + self.eps) * h + g.ndata['neigh']
+#         g = g.local_var()
+#         g.ndata['h'] = h
+#         g.update_all(fn.copy_u('h', 'm'), self._reducer('m', 'neigh'))
+#         h = (1 + self.eps) * h + g.ndata['neigh']
+
+        h = self.conv(g, h)
+    
         if self.apply_func is not None:
             h = self.apply_func(h)
 

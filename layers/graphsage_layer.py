@@ -15,7 +15,7 @@ class GraphSageLayer(nn.Module):
 
     def __init__(self, in_feats, out_feats, activation, dropout,
                  aggregator_type, batch_norm, residual=False, 
-                 bias=True, dgl_builtin=False):
+                 bias=True, dgl_builtin=True):
         super().__init__()
         self.in_channels = in_feats
         self.out_channels = out_feats
@@ -29,45 +29,45 @@ class GraphSageLayer(nn.Module):
         
         self.dropout = nn.Dropout(p=dropout)
 
-        if dgl_builtin == False:
-            self.nodeapply = NodeApply(in_feats, out_feats, activation, dropout,
-                                   bias=bias)
-            if aggregator_type == "maxpool":
-                self.aggregator = MaxPoolAggregator(in_feats, in_feats,
-                                                    activation, bias)
-            elif aggregator_type == "lstm":
-                self.aggregator = LSTMAggregator(in_feats, in_feats)
-            else:
-                self.aggregator = MeanAggregator()
-        else:
-            self.sageconv = SAGEConv(in_feats, out_feats, aggregator_type,
+#         if dgl_builtin == False:
+#             self.nodeapply = NodeApply(in_feats, out_feats, activation, dropout,
+#                                    bias=bias)
+#             if aggregator_type == "maxpool":
+#                 self.aggregator = MaxPoolAggregator(in_feats, in_feats,
+#                                                     activation, bias)
+#             elif aggregator_type == "lstm":
+#                 self.aggregator = LSTMAggregator(in_feats, in_feats)
+#             else:
+#                 self.aggregator = MeanAggregator()
+#         else:
+        self.sageconv = SAGEConv(in_feats, out_feats, aggregator_type,
                     dropout, activation=activation)
         
         if self.batch_norm:
             self.batchnorm_h = nn.BatchNorm1d(out_feats)
 
-    def forward(self, g, h):
+    def forward(self, g, h, e):
         h_in = h              # for residual connection
         
-        if self.dgl_builtin == False:
-            h = self.dropout(h)
-            g.ndata['h'] = h
-            #g.update_all(fn.copy_src(src='h', out='m'), 
-            #             self.aggregator,
-            #             self.nodeapply)
-            if self.aggregator_type == 'maxpool':
-                g.ndata['h'] = self.aggregator.linear(g.ndata['h'])
-                g.ndata['h'] = self.aggregator.activation(g.ndata['h'])
-                g.update_all(fn.copy_src('h', 'm'), fn.max('m', 'c'), self.nodeapply)
-            elif self.aggregator_type == 'lstm':
-                g.update_all(fn.copy_src(src='h', out='m'), 
-                             self.aggregator,
-                             self.nodeapply)
-            else:
-                g.update_all(fn.copy_src('h', 'm'), fn.mean('m', 'c'), self.nodeapply)
-            h = g.ndata['h']
-        else:
-            h = self.sageconv(g, h)
+#         if self.dgl_builtin == False:
+#             h = self.dropout(h)
+#             g.ndata['h'] = h
+#             #g.update_all(fn.copy_src(src='h', out='m'), 
+#             #             self.aggregator,
+#             #             self.nodeapply)
+#             if self.aggregator_type == 'maxpool':
+#                 g.ndata['h'] = self.aggregator.linear(g.ndata['h'])
+#                 g.ndata['h'] = self.aggregator.activation(g.ndata['h'])
+#                 g.update_all(fn.copy_src('h', 'm'), fn.max('m', 'c'), self.nodeapply)
+#             elif self.aggregator_type == 'lstm':
+#                 g.update_all(fn.copy_src(src='h', out='m'), 
+#                              self.aggregator,
+#                              self.nodeapply)
+#             else:
+#                 g.update_all(fn.copy_src('h', 'm'), fn.mean('m', 'c'), self.nodeapply)
+#             h = g.ndata['h']
+#         else:
+        h = self.sageconv(g, h, e)
 
         if self.batch_norm:
             h = self.batchnorm_h(h)

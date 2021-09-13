@@ -41,22 +41,28 @@ class GraphSageNet(nn.Module):
         self.layers.append(GraphSageLayer(hidden_dim, out_dim, F.relu, dropout, aggregator_type, batch_norm, residual))
         self.MLP_layer = MLPReadout(out_dim, 1)    # 1 out dim since regression problem
         
-    def forward(self, g, h, e):
+#     def forward(self, g, h, e):
+    def forward(self, g, h):
         h = self.embedding_h(h)
         h = self.in_feat_dropout(h)
+        
         for conv in self.layers:
+#             h = conv(g, h, e)
             h = conv(g, h)
         g.ndata['h'] = h
         
         if self.readout == "sum":
+#             hg = dgl.sum_nodes(g, 'h', weight = 'weight')
             hg = dgl.sum_nodes(g, 'h')
         elif self.readout == "max":
+#             hg = dgl.max_nodes(g, 'h', weight = 'weight')
             hg = dgl.max_nodes(g, 'h')
         elif self.readout == "mean":
+#             hg = dgl.mean_nodes(g, 'h', weight = 'weight')
             hg = dgl.mean_nodes(g, 'h')
         else:
-            hg = dgl.mean_nodes(g, 'h')  # default readout is mean nodes
-            
+#             hg = dgl.mean_nodes(g, 'h', weight = 'weight')  # default readout is mean nodes
+            hg = dgl.mean_nodes(g, 'h')
         return self.MLP_layer(hg)
     
     def loss(self, scores, targets):

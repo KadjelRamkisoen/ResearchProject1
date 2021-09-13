@@ -1,0 +1,38 @@
+Dataset: ZINC_reformatted,
+Model: GraphSage
+
+params={'seed': 41, 'epochs': 1000, 'batch_size': 50, 'init_lr': 5e-05, 'lr_reduce_factor': 0.5, 'lr_schedule_patience': 25, 'min_lr': 1e-06, 'weight_decay': 0, 'print_epoch_interval': 5, 'max_time': 12}
+
+net_params={'device': device(type='cuda'), 'num_atom_type': 28, 'num_bond_type': 4, 'residual': True, 'hidden_dim': 108, 'out_dim': 108, 'in_dim': 28, 'n_heads': -1, 'L': 4, 'readout': 'sum', 'layer_norm': True, 'batch_norm': True, 'in_feat_dropout': 0.0, 'dropout': 0.0, 'edge_feat': True, 'self_loop': False, 'dgl_builtin': True, 'n_mlp_GIN': -1, 'learn_eps_GIN': True, 'neighbor_aggr_GIN': 'sum', 'sage_aggregator': 'mean', 'gated': False, 'pseudo_dim_MoNet': -1, 'kernel': -1, 'data_mode': 'default', 'gnn_per_block': -1, 'embedding_dim': -1, 'pool_ratio': -1, 'linkpred': True, 'num_pool': 1, 'cat': False, 'batch_size': 50, 'radius': 2, 'avg_node_num': 24, 'depth_of_mlp': 2, 'assign_dim': -1850, 'pos_enc': True, 'pos_enc_dim': 8, 'gpu_id': 0, 'total_param': 105139}
+
+GraphSageNet(
+  (embedding_h): Linear(in_features=28, out_features=108, bias=True)
+  (in_feat_dropout): Dropout(p=0.0, inplace=False)
+  (layers): ModuleList(
+    (0): GraphSageLayer(in_channels=108, out_channels=108, aggregator=mean, residual=True)
+    (1): GraphSageLayer(in_channels=108, out_channels=108, aggregator=mean, residual=True)
+    (2): GraphSageLayer(in_channels=108, out_channels=108, aggregator=mean, residual=True)
+    (3): GraphSageLayer(in_channels=108, out_channels=108, aggregator=mean, residual=True)
+  )
+  (MLP_layer): MLPReadout(
+    (FC_layers): ModuleList(
+      (0): Linear(in_features=108, out_features=54, bias=True)
+      (1): Linear(in_features=54, out_features=27, bias=True)
+      (2): Linear(in_features=27, out_features=1, bias=True)
+    )
+  )
+)
+
+Total Parameters: 105139
+
+
+    FINAL RESULTS
+TEST MAE: 0.4861
+TRAIN MAE: 0.3141
+
+
+    Convergence Time (Epochs): 386.0000
+Total Time Taken: 0.5674 hrs
+Average Time Per Epoch: 5.1923 s
+
+
